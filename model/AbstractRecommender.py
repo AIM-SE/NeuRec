@@ -5,6 +5,7 @@ import scipy.sparse as sp
 from util import Logger
 import os
 import time
+import torch
 
 def _create_logger(config, data_name):
     # create a logger
@@ -20,8 +21,9 @@ def _create_logger(config, data_name):
     return logger
 
 
-class AbstractRecommender(object):
+class AbstractRecommender(torch.nn.Module):
     def __init__(self, dataset, conf):
+        super(AbstractRecommender,self).__init__()
         self.evaluator = ProxyEvaluator(dataset.get_user_train_dict(),
                                         dataset.get_user_test_dict(),
                                         dataset.get_user_test_neg_dict(),
@@ -40,13 +42,16 @@ class AbstractRecommender(object):
 
     def train_model(self):
         raise NotImplementedError
-    
+    def forward(self, log_seqs, pos_seqs, neg_seqs):
+        raise NotImplementedError
+
     def predict(self, user_ids, items):
         raise NotImplementedError
 
 
 class SeqAbstractRecommender(AbstractRecommender):
     def __init__(self, dataset, conf):
+        super(SeqAbstractRecommender, self).__init__(dataset, conf)
         if dataset.time_matrix is None:
             raise ValueError("Dataset does not contant time infomation!")
         super(SeqAbstractRecommender, self).__init__(dataset, conf)
